@@ -18,10 +18,10 @@ contract Handler is Test {
     int256 startingX;
     int256 startingY;
 
-    int256 expectedDeltaX;
-    int256 expectedDeltaY;
-    int256 actualDeltaX;
-    int256 actualDeltaY;
+    int256 public expectedDeltaX;
+    int256 public expectedDeltaY;
+    int256 public actualDeltaX;
+    int256 public actualDeltaY;
 
     constructor(TSwapPool _pool) {
         pool = _pool;
