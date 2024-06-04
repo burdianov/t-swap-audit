@@ -30,7 +30,11 @@ contract Handler is Test {
     }
 
     function swapPoolTokenForWethBasedOnOutputWeth(uint256 outputWeth) public {
-        outputWeth = bound(outputWeth, 0, type(uint64).max);
+        outputWeth = bound(
+            outputWeth,
+            pool.getMinimumWethDepositAmount(),
+            weth.balanceOf(address(pool))
+        );
         if (outputWeth >= weth.balanceOf(address(pool))) {
             return;
         }
@@ -43,13 +47,11 @@ contract Handler is Test {
             return;
         }
 
-        startingY = int256(weth.balanceOf(address(this)));
-        startingX = int256(poolToken.balanceOf(address(this)));
+        startingY = int256(weth.balanceOf(address(pool)));
+        startingX = int256(poolToken.balanceOf(address(pool)));
 
         expectedDeltaY = int256(-1) * int256(outputWeth);
-        expectedDeltaX = int256(
-            pool.getPoolTokensToDepositBasedOnWeth(poolTokenAmount)
-        );
+        expectedDeltaX = int256(poolTokenAmount);
 
         if (poolToken.balanceOf(swapper) < poolTokenAmount) {
             poolToken.mint(
@@ -68,18 +70,19 @@ contract Handler is Test {
         );
         vm.stopPrank();
 
-        uint256 endingY = weth.balanceOf(address(this));
-        uint256 endingX = poolToken.balanceOf(address(this));
+        uint256 endingY = weth.balanceOf(address(pool));
+        uint256 endingX = poolToken.balanceOf(address(pool));
 
         actualDeltaY = int256(endingY) - int256(startingY);
-        actualDeltaY = int256(endingX) - int256(startingX);
+        actualDeltaX = int256(endingX) - int256(startingX);
     }
 
     function deposit(uint256 wethAmount) public {
-        wethAmount = bound(wethAmount, 0, type(uint64).max);
+        uint256 minWeth = pool.getMinimumWethDepositAmount();
+        wethAmount = bound(wethAmount, minWeth, type(uint64).max);
 
-        startingY = int256(weth.balanceOf(address(this)));
-        startingX = int256(poolToken.balanceOf(address(this)));
+        startingY = int256(weth.balanceOf(address(pool)));
+        startingX = int256(poolToken.balanceOf(address(pool)));
 
         expectedDeltaY = int256(wethAmount);
         expectedDeltaX = int256(
@@ -100,10 +103,10 @@ contract Handler is Test {
         );
         vm.stopPrank();
 
-        uint256 endingY = weth.balanceOf(address(this));
-        uint256 endingX = poolToken.balanceOf(address(this));
+        uint256 endingY = weth.balanceOf(address(pool));
+        uint256 endingX = poolToken.balanceOf(address(pool));
 
         actualDeltaY = int256(endingY) - int256(startingY);
-        actualDeltaY = int256(endingX) - int256(startingX);
+        actualDeltaX = int256(endingX) - int256(startingX);
     }
 }
